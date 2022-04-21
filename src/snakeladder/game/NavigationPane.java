@@ -21,7 +21,7 @@ public class NavigationPane extends GameGrid
       {
         Monitor.putSleep();
         handBtn.show(1);
-       roll(getDieValue());
+        roll(getDieValue());
         delay(1000);
         handBtn.show(0);
       }
@@ -77,6 +77,8 @@ public class NavigationPane extends GameGrid
   private GGCheckButton toggleCheck =
           new GGCheckButton("Toggle Mode", YELLOW, TRANSPARENT, isToggle);
   private int nbRolls = 0;
+
+  private int numberOfDice = 0;
   private volatile boolean isGameOver = false;
   private Properties properties;
   private java.util.List<java.util.List<Integer>> dieValues = new ArrayList<>();
@@ -89,6 +91,7 @@ public class NavigationPane extends GameGrid
             (properties.getProperty("dice.count") == null)
                     ? 1  // default
                     : Integer.parseInt(properties.getProperty("dice.count"));
+    this.numberOfDice = numberOfDice;
     System.out.println("numberOfDice = " + numberOfDice);
     isAuto = Boolean.parseBoolean(properties.getProperty("autorun"));
     autoChk = new GGCheckButton("Auto Run", YELLOW, TRANSPARENT, isAuto);
@@ -179,7 +182,10 @@ public class NavigationPane extends GameGrid
     }
     int currentRound = nbRolls / gp.getNumberOfPlayers();
     int playerIndex = nbRolls % gp.getNumberOfPlayers();
+    int numberOfDie = this.numberOfDice;
+
     if (dieValues.get(playerIndex).size() > currentRound) {
+      System.out.println("dieValues.get(playerIndex).get(currentRound): " + dieValues.get(playerIndex).get(currentRound));
       return dieValues.get(playerIndex).get(currentRound);
     }
     return RANDOM_ROLL_TAG;
@@ -284,7 +290,7 @@ public class NavigationPane extends GameGrid
       String result = gp.getPuppet().getPuppetName() + " - pos: " + currentIndex;
       showResult(result);
       gp.switchToNextPuppet();
-      // System.out.println("current puppet - auto: " + gp.getPuppet().getPuppetName() + "  " + gp.getPuppet().isAuto() );
+      System.out.println("current puppet - auto: " + gp.getPuppet().getPuppetName() + "  " + gp.getPuppet().isAuto() );
 
       if (isAuto) {
         Monitor.wakeUp();
@@ -329,8 +335,16 @@ public class NavigationPane extends GameGrid
     showStatus("Rolling...");
     showPips("");
 
+    int stepsToMove = nb;
+    if (numberOfDice != 1) {
+      for (int i = 1; i < numberOfDice; i++) {
+        stepsToMove += ServicesRandom.get().nextInt(6) + 1;
+      }
+    }
+
     removeActors(Die.class);
-    Die die = new Die(nb, this);
+
+    Die die = new Die(nb, this, stepsToMove);
     addActor(die, dieBoardLocation);
   }
 
@@ -344,5 +358,9 @@ public class NavigationPane extends GameGrid
 
   public void checkAuto() {
     if (isAuto) Monitor.wakeUp();
+  }
+
+  public int getNumberOfDice() {
+    return numberOfDice;
   }
 }
