@@ -14,12 +14,16 @@ public class Puppet extends Actor
   private int dy;
   private boolean isAuto;
   private String puppetName;
+  private int initialPip;
+  private int pipsArray[];
+  private int puppetInter[];
 
   Puppet(GamePane gp, NavigationPane np, String puppetImage)
   {
     super(puppetImage);
     this.gamePane = gp;
     this.navigationPane = np;
+    createPuppetArray();
   }
 
   public boolean isAuto() {
@@ -46,6 +50,8 @@ public class Puppet extends Actor
       setLocation(gamePane.startLocation);
     }
     this.nbSteps = nbSteps;
+    initialPip = nbSteps;
+    savePipToArray(initialPip);
     setActEnabled(true);
   }
 
@@ -102,7 +108,7 @@ public class Puppet extends Actor
 
       // Check end of connection
       if ((dy > 0 && (y - gamePane.toPoint(currentCon.locEnd).y) > 0)
-        || (dy < 0 && (y - gamePane.toPoint(currentCon.locEnd).y) < 0))
+              || (dy < 0 && (y - gamePane.toPoint(currentCon.locEnd).y) < 0))
       {
         gamePane.setSimulationPeriod(100);
         setActEnabled(false);
@@ -135,19 +141,32 @@ public class Puppet extends Actor
         {
           gamePane.setSimulationPeriod(50);
           y = gamePane.toPoint(currentCon.locStart).y;
-          if (currentCon.locEnd.y > currentCon.locStart.y)
-            dy = gamePane.animationStep;
-          else
-            dy = -gamePane.animationStep;
-          if (currentCon instanceof Snake)
-          {
-            navigationPane.showStatus("Digesting...");
-            navigationPane.playSound(GGSound.MMM);
+          //for the condition going "down" and pip is the lowest possible value ignore the condition
+          if(initialPip == navigationPane.getNumberOfDice() && currentCon.locEnd.y > currentCon.locStart.y){
+            y = 0;
+            currentCon = null;
+            setActEnabled(false);
+            navigationPane.prepareRoll(cellIndex);
           }
-          else
-          {
-            navigationPane.showStatus("Climbing...");
-            navigationPane.playSound(GGSound.BOING);
+          else {
+            if (currentCon.locEnd.y > currentCon.locStart.y){
+              dy = gamePane.animationStep;
+              puppetInter[1]+=1;
+            }
+            else{
+              dy = -gamePane.animationStep;
+              puppetInter[0]+=1;
+            }
+            if (currentCon instanceof Snake)
+            {
+              navigationPane.showStatus("Digesting...");
+              navigationPane.playSound(GGSound.MMM);
+            }
+            else
+            {
+              navigationPane.showStatus("Climbing...");
+              navigationPane.playSound(GGSound.BOING);
+            }
           }
         }
         else
@@ -159,4 +178,34 @@ public class Puppet extends Actor
     }
   }
 
+  //initialise arrays puppetInter[] and pipsArray[] to keep statistics
+  public void createPuppetArray(){
+    puppetInter = new int[2];
+    pipsArray = new int[navigationPane.getNumberOfDice()*6+1];
+  }
+
+  //save the input of the pip into the pipArray[]
+  public void savePipToArray(int nb){
+    int minVal = navigationPane.getNumberOfDice();
+    for(int i = minVal; i<minVal*6+1; i++){
+      if(i == nb){ pipsArray[i]+=1; }
+    }
+  }
+
+  //function to create output of the player's pip history
+  public void showStats(){
+    int minVal = navigationPane.getNumberOfDice();
+    System.out.printf("%s rolled: ", puppetName);
+    for(int i = minVal; i<minVal*6+1; i++){
+      if(i == minVal*6)
+        System.out.printf("%d-%d\n", i, pipsArray[i]);
+      else
+        System.out.printf("%d-%d, ", i, pipsArray[i]);
+    }
+  }
+
+  //function to create output of the player's interaction history
+  public void showInter(){
+    System.out.printf("%s traversed: up-%d, down-%d\n", puppetName, puppetInter[0], puppetInter[1]);
+  }
 }
