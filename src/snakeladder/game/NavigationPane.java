@@ -77,7 +77,6 @@ public class NavigationPane extends GameGrid
   private GGCheckButton toggleCheck =
           new GGCheckButton("Toggle Mode", YELLOW, TRANSPARENT, isToggle);
   private int nbRolls = 0;
-
   private int numberOfDice = 0;
   private volatile boolean isGameOver = false;
   private Properties properties;
@@ -87,11 +86,10 @@ public class NavigationPane extends GameGrid
   NavigationPane(Properties properties)
   {
     this.properties = properties;
-    int numberOfDice =  //Number of six-sided dice
+    numberOfDice =  //Number of six-sided dice
             (properties.getProperty("dice.count") == null)
                     ? 1  // default
                     : Integer.parseInt(properties.getProperty("dice.count"));
-    this.numberOfDice = numberOfDice;
     System.out.println("numberOfDice = " + numberOfDice);
     isAuto = Boolean.parseBoolean(properties.getProperty("autorun"));
     autoChk = new GGCheckButton("Auto Run", YELLOW, TRANSPARENT, isAuto);
