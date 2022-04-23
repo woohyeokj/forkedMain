@@ -49,7 +49,6 @@ public class NavigationPane extends GameGrid
 
   private final Location autoChkLocation = new Location(15, 375);
   private final Location toggleModeLocation = new Location(95, 375);
-
   private final Location die1Location = new Location(20, 270);
   private final Location die2Location = new Location(50, 270);
   private final Location die3Location = new Location(80, 270);
@@ -360,5 +359,19 @@ public class NavigationPane extends GameGrid
 
   public int getNumberOfDice() {
     return numberOfDice;
+  }
+
+  public boolean toggleStat(){ return isToggle; }
+
+  //check the toggle button and set isToggle as true
+  public void toggleCheck(){
+    toggleCheck.setChecked(true);
+    isToggle = true;
+  }
+
+  //uncheck the toggle button and set isToggle as false
+  public void toggleUncheck(){
+    toggleCheck.setChecked(false);
+    isToggle = false;
   }
 }
