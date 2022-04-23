@@ -94,9 +94,19 @@ public class GamePane extends GameGrid
 
   Connection getConnectionAt(Location loc)
   {
-    for (Connection con : connections)
-      if (con.locStart.equals(loc))
-        return con;
+    for (Connection con : connections) {
+      //check if the toggle button is on or not
+      if(np.toggleStat()){
+        if(con.locEnd.equals(loc)){
+          return con;
+        }
+      }
+      else if(!np.toggleStat()){
+        if (con.locStart.equals(loc)) {
+          return con;
+        }
+      }
+    }
     return null;
   }
 
@@ -129,5 +139,7 @@ public class GamePane extends GameGrid
     double b = (double)(y1 * x0 - y0 * x1) / (y1 - y0);
     return (int)(a * y + b);
   }
-
+  public ArrayList<Connection> getConnections(){
+    return connections;
+  }
 }
