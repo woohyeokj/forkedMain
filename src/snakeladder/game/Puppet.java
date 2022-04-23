@@ -53,6 +53,7 @@ public class Puppet extends Actor
     initialPip = nbSteps;
     savePipToArray(initialPip);
     setActEnabled(true);
+    autoToggle();
   }
 
   void resetToStartingPoint() {
@@ -105,19 +106,8 @@ public class Puppet extends Actor
       int x = gamePane.x(y, currentCon);
       setPixelLocation(new Point(x, y));
       y += dy;
-
       // Check end of connection
-      if ((dy > 0 && (y - gamePane.toPoint(currentCon.locEnd).y) > 0)
-              || (dy < 0 && (y - gamePane.toPoint(currentCon.locEnd).y) < 0))
-      {
-        gamePane.setSimulationPeriod(100);
-        setActEnabled(false);
-        setLocation(currentCon.locEnd);
-        cellIndex = currentCon.cellEnd;
-        setLocationOffset(new Point(0, 0));
-        currentCon = null;
-        navigationPane.prepareRoll(cellIndex);
-      }
+      actCondition();
       return;
     }
 
@@ -139,34 +129,16 @@ public class Puppet extends Actor
         // Check if on connection start
         if ((currentCon = gamePane.getConnectionAt(getLocation())) != null)
         {
-          gamePane.setSimulationPeriod(50);
-          y = gamePane.toPoint(currentCon.locStart).y;
-          //for the condition going "down" and pip is the lowest possible value ignore the condition
-          if(initialPip == navigationPane.getNumberOfDice() && currentCon.locEnd.y > currentCon.locStart.y){
-            y = 0;
-            currentCon = null;
-            setActEnabled(false);
-            navigationPane.prepareRoll(cellIndex);
+          actionSub();
+          if (currentCon instanceof Snake)
+          {
+            navigationPane.showStatus("Digesting...");
+            navigationPane.playSound(GGSound.MMM);
           }
-          else {
-            if (currentCon.locEnd.y > currentCon.locStart.y){
-              dy = gamePane.animationStep;
-              puppetInter[1]+=1;
-            }
-            else{
-              dy = -gamePane.animationStep;
-              puppetInter[0]+=1;
-            }
-            if (currentCon instanceof Snake)
-            {
-              navigationPane.showStatus("Digesting...");
-              navigationPane.playSound(GGSound.MMM);
-            }
-            else
-            {
-              navigationPane.showStatus("Climbing...");
-              navigationPane.playSound(GGSound.BOING);
-            }
+          else
+          {
+            navigationPane.showStatus("Climbing...");
+            navigationPane.playSound(GGSound.BOING);
           }
         }
         else
@@ -207,5 +179,120 @@ public class Puppet extends Actor
   //function to create output of the player's interaction history
   public void showInter(){
     System.out.printf("%s traversed: up-%d, down-%d\n", puppetName, puppetInter[0], puppetInter[1]);
+  }
+
+  public void actCondition(){
+    if(!navigationPane.toggleStat()){
+      if ((dy > 0 && (y - gamePane.toPoint(currentCon.locEnd).y) > 0)
+              || (dy < 0 && (y - gamePane.toPoint(currentCon.locEnd).y) < 0))
+      {
+        gamePane.setSimulationPeriod(100);
+        setActEnabled(false);
+        setLocation(currentCon.locEnd);
+        cellIndex = currentCon.cellEnd;
+        setLocationOffset(new Point(0, 0));
+        currentCon = null;
+        navigationPane.prepareRoll(cellIndex);
+      }
+    }
+    //when the toggle button is on
+    if(navigationPane.toggleStat()){
+      if ((dy > 0 && (y - gamePane.toPoint(currentCon.locStart).y) > 0)
+              || (dy < 0 && (y - gamePane.toPoint(currentCon.locStart).y) < 0))
+      {
+        gamePane.setSimulationPeriod(100);
+        setActEnabled(false);
+        setLocation(currentCon.locStart);
+        cellIndex = currentCon.cellStart;
+        setLocationOffset(new Point(0, 0));
+        currentCon = null;
+        navigationPane.prepareRoll(cellIndex);
+      }
+    }
+  }
+
+  public void actionSub(){
+    if(!navigationPane.toggleStat()){
+      gamePane.setSimulationPeriod(50);
+      y = gamePane.toPoint(currentCon.locStart).y;
+      //for the condition going "down" and pip is the lowest possible value ignore the condition
+      if(initialPip == navigationPane.getNumberOfDice() && currentCon.locEnd.y > currentCon.locStart.y){
+        y = 0;
+        currentCon = null;
+        setActEnabled(false);
+        navigationPane.prepareRoll(cellIndex);
+      }
+      else {
+        if (currentCon.locEnd.y > currentCon.locStart.y){
+          dy = gamePane.animationStep;
+          puppetInter[1]+=1;
+        }
+        else{
+          dy = -gamePane.animationStep;
+          puppetInter[0]+=1;
+        }
+      }
+    }
+
+    //when the toggle button is on
+    if(navigationPane.toggleStat()){
+      gamePane.setSimulationPeriod(50);
+      y = gamePane.toPoint(currentCon.locEnd).y;
+      //for the condition going "down" and pip is the lowest possible value ignore the condition
+      if(initialPip == navigationPane.getNumberOfDice() && currentCon.locEnd.y < currentCon.locStart.y){
+        y = 0;
+        currentCon = null;
+        setActEnabled(false);
+        navigationPane.prepareRoll(cellIndex);
+      }
+      else {
+        if (currentCon.locEnd.y < currentCon.locStart.y){
+          dy = gamePane.animationStep;
+          puppetInter[1]+=1;
+        }
+        else{
+          dy = -gamePane.animationStep;
+          puppetInter[0]+=1;
+        }
+      }
+    }
+  }
+
+  public void autoToggle(){
+    if(isAuto){
+      int changeNeed = 0;
+      for(Puppet newPuppet: gamePane.getAllPuppets()){
+        int up =0 , down = 0;
+        if(newPuppet.puppetName != puppetName){
+          for(int i = navigationPane.getNumberOfDice(); i < navigationPane.getNumberOfDice()*6+1; i++){
+            //when the toggle is not on
+            if(!navigationPane.toggleStat()){
+              for(Connection con: gamePane.getConnections()){
+                if(con.cellStart == newPuppet.cellIndex+i){
+                  if(con.cellStart < con.cellEnd) up++;
+                  else down++;
+                }
+              }
+            }
+
+            //when the toggle is on
+            if(navigationPane.toggleStat()){
+              for(Connection con: gamePane.getConnections()){
+                if(con.cellEnd == newPuppet.cellIndex+i){
+                  if(con.cellEnd < con.cellStart) up++;
+                  else down++;
+                }
+              }
+            }
+          }
+          if(up >= down) changeNeed++;
+        }
+      }
+
+      if(changeNeed > (gamePane.getNumberOfPlayers()-1)/2 && !navigationPane.toggleStat())
+        navigationPane.toggleCheck();
+      else
+        navigationPane.toggleUncheck();
+    }
   }
 }
