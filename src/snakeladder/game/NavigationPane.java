@@ -6,6 +6,7 @@ import ch.aplu.util.*;
 import snakeladder.game.custom.CustomGGButton;
 import snakeladder.utility.ServicesRandom;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -179,7 +180,6 @@ public class NavigationPane extends GameGrid
     }
     int currentRound = nbRolls / gp.getNumberOfPlayers();
     int playerIndex = nbRolls % gp.getNumberOfPlayers();
-    int numberOfDie = this.numberOfDice;
 
     if (dieValues.get(playerIndex).size() > currentRound) {
       System.out.println("dieValues.get(playerIndex).get(currentRound): " + dieValues.get(playerIndex).get(currentRound));
@@ -332,10 +332,12 @@ public class NavigationPane extends GameGrid
     showStatus("Rolling...");
     showPips("");
 
-    int stepsToMove = nb;
+    ArrayList<Integer> stepsToMove = new ArrayList<Integer>();
+    stepsToMove.add(nb);
+
     if (numberOfDice != 1) {
       for (int i = 1; i < numberOfDice; i++) {
-        stepsToMove += ServicesRandom.get().nextInt(6) + 1;
+        stepsToMove.add(ServicesRandom.get().nextInt(6) + 1);
       }
     }
 
